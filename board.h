@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <cstdio>
+#include <algorithm>
 
 /**
  * array-based board for 2048
@@ -85,9 +86,10 @@ public:
                 if (tile == 0) continue;
                 row[c] = 0;
                 if (hold) {
-                    if (tile == hold) {
-                        row[top++] = ++tile;
-                        score += (1 << tile);
+                    if (mergeable(tile, hold)) {
+                        int new_tile = std::max(tile, hold) + 1;
+                        row[top++] = new_tile;
+                        score += i2t(new_tile);
                         hold = 0;
                     } else {
                         row[top++] = hold;
@@ -105,7 +107,6 @@ public:
         reflect_horizontal();
         int score = move_left();
         reflect_horizontal();
-        return score;
         return score;
     }
     int move_up() {
@@ -181,4 +182,5 @@ private:
     const std::unordered_map<int, int> index2tile, tile2index;
     int i2t(int i) { return index2tile.at(i); }
     int t2i(int t) { return tile2index.at(t); }
+    bool mergeable(int i1, int i2) { return i1 - i2 == 1 || i2 - i1 == -1; }
 };
