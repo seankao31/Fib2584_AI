@@ -167,10 +167,10 @@ public:
         out << "+------------------------+" << std::endl;
         for (int r = 0; r < 4; r++) {
             std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-                i2t(b[r][0]),
-                i2t(b[r][1]),
-                i2t(b[r][2]),
-                i2t(b[r][3]));
+                b.i2t(b[r][0]),
+                b.i2t(b[r][1]),
+                b.i2t(b[r][2]),
+                b.i2t(b[r][3]));
             out << buff << std::endl;
         }
         out << "+------------------------+" << std::endl;
@@ -180,7 +180,9 @@ public:
 private:
     std::array<std::array<int, 4>, 4> tile;
     const std::unordered_map<int, int> index2tile, tile2index;
-    int i2t(int i) { return index2tile.at(i); }
-    int t2i(int t) { return tile2index.at(t); }
-    bool mergeable(int i1, int i2) { return i1 - i2 == 1 || i2 - i1 == -1; }
+    int i2t(int i) const { return index2tile.at(i); }
+    int t2i(int t) const { return tile2index.at(t); }
+    bool mergeable(int i1, int i2) {
+        return (i1 == 1 && i1 == i2) || i1 - i2 == 1 || i2 - i1 == -1;
+    }
 };
