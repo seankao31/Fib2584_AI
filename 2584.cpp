@@ -1,6 +1,6 @@
 /**
- * Basic Environment for Game 2048
- * use 'g++ -std=c++0x -O3 -g -o 2048 2048.cpp' to compile the source
+ * Basic Environment for Game 2584
+ * use 'g++ -std=c++0x -O3 -g -o 2584 2584.cpp' to compile the source
  *
  * Computer Games and Intelligence (CGI) Lab, NCTU, Taiwan
  * http://www.aigames.nctu.edu.tw
@@ -22,7 +22,7 @@
 #include "statistic.h"
 
 int main(int argc, const char* argv[]) {
-    std::cout << "2048-Demo: ";
+    std::cout << "2584-Demo: ";
     std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
     std::cout << std::endl << std::endl;
 
