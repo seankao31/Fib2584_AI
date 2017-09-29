@@ -37,7 +37,7 @@ public:
      */
     void show() const {
         int block = std::min(data.size(), this->block);
-        size_t sum = 0, max = 0, opc = 0, stat[16] = { 0 };
+        size_t sum = 0, max = 0, opc = 0, stat[32] = { 0 };
         uint64_t duration = 0;
         auto it = data.end();
         for (int i = 0; i < block; i++) {
@@ -64,7 +64,7 @@ public:
         std::cout << "ops = " << int(ops) << std::endl;
         for (int t = 0, c = 0; c < block; c += stat[t++]) {
             if (stat[t] == 0) continue;
-            int accu = std::accumulate(stat + t, stat + 16, 0);
+            int accu = std::accumulate(stat + t, stat + 32, 0);
             std::cout << "\t" << i2t(t) << "\t" << (accu * coef) << "%";
             std::cout << "\t(" << (stat[t] * coef) << "%)" << std::endl;
         }
@@ -127,7 +127,7 @@ public:
 private:
     class record : public std::vector<action> {
     public:
-        record() { reserve(32768); }
+        record() { reserve(80000); }
         void tick() { time[0] = milli(); }
         void tock() { time[1] = milli(); }
         uint64_t tick_time() const { return time[0]; }
