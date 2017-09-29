@@ -167,10 +167,10 @@ public:
         out << "+------------------------+" << std::endl;
         for (int r = 0; r < 4; r++) {
             std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-                (1 << b[r][0]) & -2u, // use -2u (0xff...fe) to remove the unnecessary 1 for (1 << 0)
-                (1 << b[r][1]) & -2u,
-                (1 << b[r][2]) & -2u,
-                (1 << b[r][3]) & -2u);
+                i2t(b[r][0]),
+                i2t(b[r][1]),
+                i2t(b[r][2]),
+                i2t(b[r][3]));
             out << buff << std::endl;
         }
         out << "+------------------------+" << std::endl;
