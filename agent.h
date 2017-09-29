@@ -71,7 +71,7 @@ private:
 
 /**
  * player (dummy)
- * select an action randomly
+ * select an action resulted in highest score
  */
 class player : public agent {
 public:
@@ -82,11 +82,18 @@ public:
 
     virtual action take_action(const board& before) {
         int opcode[] = { 0, 1, 2, 3 };
-        std::shuffle(opcode, opcode + 4, engine);
+        int best_score = -1;
+        int best_op = -1;
         for (int op : opcode) {
             board b = before;
-            if (b.move(op) != -1) return action::move(op);
+            int score = b.move(op);
+            if (score > best_score) {
+                best_score = score;
+                best_op = op;
+            }
         }
+        if (best_score != -1)
+            return action::move(best_op);
         return action();
     }
 
