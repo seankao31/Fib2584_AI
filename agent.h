@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "board.h"
 #include "action.h"
+#include "heuristic.h"
 
 class agent {
 public:
@@ -71,7 +72,7 @@ private:
 
 /**
  * player (dummy)
- * select an action randomly
+ * select an action resulted in highest score
  */
 class player : public agent {
 public:
@@ -82,11 +83,18 @@ public:
 
     virtual action take_action(const board& before) {
         int opcode[] = { 0, 1, 2, 3 };
-        std::shuffle(opcode, opcode + 4, engine);
+        int best_value = -1;
+        int best_op = -1;
         for (int op : opcode) {
             board b = before;
-            if (b.move(op) != -1) return action::move(op);
+            heuristic h(b, op);
+            if (h.estimate() > best_value) {
+                best_value = h;
+                best_op = op;
+            }
         }
+        if (best_value != -1)
+            return action::move(best_op);
         return action();
     }
 
