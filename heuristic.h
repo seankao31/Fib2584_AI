@@ -30,19 +30,20 @@ public:
          *  (1)  (1)  (2)  (2)
          *
          */
-        for (int i = 0; i < 16; i++) {
-            if (b(i) > max_index) {
-                max_index = b(i);
-                max_pos.clear();
-                max_pos.insert(position(i));
-            }
-            else if (b(i) == max_index) {
-                max_pos.insert(position(i));
-            }
-            else continue;
-        }
+        // for (int i = 0; i < 16; i++) {
+        //     if (b(i) > max_index) {
+        //         max_index = b(i);
+        //         max_pos.clear();
+        //         max_pos.insert(position(i));
+        //     }
+        //     else if (b(i) == max_index) {
+        //         max_pos.insert(position(i));
+        //     }
+        //     else continue;
+        // }
         int max_value = 0;
-        for (int pos : max_pos) {
+        // for (int pos : max_pos) {
+        for (int pos = 0; pos < 4; pos++) {
             value = 0;
             board b_rotate = b;
             b_rotate.rotate(pos);
