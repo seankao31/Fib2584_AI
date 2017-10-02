@@ -65,7 +65,7 @@ public:
         for (int t = 0, c = 0; c < block; c += stat[t++]) {
             if (stat[t] == 0) continue;
             int accu = std::accumulate(stat + t, stat + 32, 0);
-            std::cout << "\t" << i2t(t) << "\t" << (accu * coef) << "%";
+            std::cout << "\t" << i2t[t] << "\t" << (accu * coef) << "%";
             std::cout << "\t(" << (stat[t] * coef) << "%)" << std::endl;
         }
         std::cout << std::endl;

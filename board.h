@@ -70,7 +70,7 @@ public:
                     if (mergeable(tile, hold)) {
                         int new_tile = std::max(tile, hold) + 1;
                         row[top++] = new_tile;
-                        score += i2t(new_tile);
+                        score += i2t[new_tile];
                         hold = 0;
                     } else {
                         row[top++] = hold;
@@ -148,10 +148,10 @@ public:
         out << "+------------------------+" << std::endl;
         for (int r = 0; r < 4; r++) {
             std::snprintf(buff, sizeof(buff), "|%6u%6u%6u%6u|",
-                i2t(b[r][0]),
-                i2t(b[r][1]),
-                i2t(b[r][2]),
-                i2t(b[r][3]));
+                i2t[b[r][0]],
+                i2t[b[r][1]],
+                i2t[b[r][2]],
+                i2t[b[r][3]]);
             out << buff << std::endl;
         }
         out << "+------------------------+" << std::endl;
