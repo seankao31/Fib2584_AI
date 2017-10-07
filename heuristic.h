@@ -2,9 +2,6 @@
 #include <algorithm>
 #include "board.h"
 #include "action.h"
-#include "index_tile_convertion.h"
-
-#include <iostream>
 
 class heuristic {
 public:
@@ -49,32 +46,8 @@ public:
                 max_value = std::max(max_value, value);
             }
         }
-        value = max_value;
+        value = (score == -1)? score: max_value;
 
-        // --- this block consider only this next move
-        // for (int rt = 0; rt < 4; rt++) {
-        //     value = 0;
-        //     board b_rotate = b;
-        //     b_rotate.rotate(rt);
-        //     for (int r = 0; r < 4; r++) {
-        //         for (int c = 0; c < 4; c++) {
-        //             value += coef[r+c] * b_rotate[r][c];
-        //         }
-        //     }
-        //     max_value = std::max(max_value, value);
-        // }
-        // for (int i = 0; i < 16; i++) {
-        //     if (b(i) == 0)
-        //         empty++;
-        // }
-        // value = max_value;
-        // value += 10 * score;
-        // value += 15 * empty;
-        // ---
-
-        value = (score == -1)? score: value;
-        // std::cout << value << std::endl;
-        // std::cout << std::endl << value << std::endl << b;
         return value;
     }
 

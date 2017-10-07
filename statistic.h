@@ -8,7 +8,6 @@
 #include "board.h"
 #include "action.h"
 #include "agent.h"
-#include "index_tile_convertion.h"
 
 class statistic {
 public:
