@@ -159,16 +159,73 @@ public:
     }
 
 private:
+    float get_value(const board& b) {
+        float value = 0;
+        std::array<size_t, 8> lidx = get_idx_list(b);
+        for (size_t idx : lidx) {
+            if (idx >= 2*SIZE)
+                continue;
+            value += weights.back()[idx];
+        }
+        return value;
+    }
+
+    std::array<size_t, 8> get_idx_list(const board& b) {
+        std::array<size_t, 8> lidx;
+        board r = b;
+        lidx[0] = get_idx(r[0], 0);
+        lidx[1] = get_idx(r[1], 1);
+        lidx[2] = get_idx(r[2], 1);
+        lidx[3] = get_idx(r[3], 0);
+        r.rotate_right();
+        lidx[4] = get_idx(r[0], 0);
+        lidx[5] = get_idx(r[1], 1);
+        lidx[6] = get_idx(r[2], 1);
+        lidx[7] = get_idx(r[3], 0);
+        return lidx;
+    }
+
+    /*
+     *outer outer outer outer
+     *inner inner inner inner
+     *inner inner inner inner
+     *outer outer outer outer
+     */
+    size_t get_idx(const std::array<int, 4>& row, bool inner) {
+        size_t idx = 0;
+        if (row[0] > row[3] || (row[0] == row[3] && row[1] > row[2])) {
+            for (int i = 3; i >= 0; i--) {
+                idx *= TILENUMBER;
+                idx += row[i];
+            }
+        }
+        else {
+            for (int i = 0; i < 4; i++) {
+                idx *= TILENUMBER;
+                idx += row[i];
+            }
+        }
+        if (idx >= SIZE) // should be out of bound
+            idx += SIZE;
+
+        if (inner)
+            idx += SIZE;
+
+        if (idx >= 2*SIZE) {
+            std::cout << "index out of bound" << std::endl;
+            std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
+        }
+
+        return idx;
+    }
+
+private:
     std::vector<weight> weights;
 
     struct state {
-        // TODO: select the necessary components of a state
-        //board before;
         board after;
         float value;
-        //action move;
         int reward;
-        //int op = -1;
     };
 
     std::vector<state> episode;
