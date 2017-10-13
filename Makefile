@@ -1,5 +1,5 @@
 FLAGS = -std=c++0x -O3 -g -Wall -fmessage-length=0
-DEPS = action.h agent.h board.h heuristic.h statistic.h
+DEPS = action.h agent.h board.h weight.h statistic.h
 OBJ = 2584.o
 
 all: 2584

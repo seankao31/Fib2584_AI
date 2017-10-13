@@ -10,7 +10,7 @@
 #include "action.h"
 #include "weight.h"
 
-#define TILENUMBER 16
+#define TILENUMBER 24
 
 class agent {
 public:
@@ -103,22 +103,72 @@ public:
             //std::cout << s.reward << std::endl;
             //std::cout << s.after << std::endl << std::endl;
         //}
+
+        //std::cout << "reward: " << episode.back().reward << std::endl;
+        //std::cout << "ignore final board" << std::endl;
+        //std::cout << "====================" << std::endl;
+
+        for (int i = episode.size()-2; i >= 0; i--) {
+
+            //std::cout << "reward: " << episode[i].reward << std::endl;
+            //std::cout << episode[i].after << std::endl << std::endl;
+
+            float delta = alpha * (episode[i+1].reward + episode[i+1].value - episode[i].value);
+
+            //std::cout << delta << " = " << alpha << " * (" << episode[i+1].reward << " + " << episode[i+1].value << " - " <<  episode[i].value << ")" << std::endl;
+            //std::cout << "apply to the following:" << std::endl;
+
+            std::array<size_t, 8> lidx = get_idx_list(episode[i].after);
+            for (size_t idx : lidx) {
+                if (idx >= 2*SIZE) {
+                    std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
+                    continue;
+                }
+
+                // print debug begin
+                //size_t pidx = idx;
+                //std::cout << pidx << std::endl;
+                //if (pidx >= SIZE) {
+                    //std::cout << "inner ";
+                    //pidx -= SIZE;
+                //}
+                //else
+                    //std::cout << "outer ";
+                //for (int i = 0; i < 4; ++i) {
+                    //std::cout << pidx % TILENUMBER << ",";
+                    //pidx /= TILENUMBER;
+                //}
+                //std::cout << std::endl;
+                // print debug end
+
+                weights.back()[idx] += delta;
+                episode[i].value += delta;
+            }
+        }
     }
 
     virtual action take_action(const board& before) {
         action best;
         state s;
         s.reward = 0;
-        s.value = 0; // 0 instead of -1, for learning
+        s.value = 0;
+
+        std::cout << before << std::endl;
+
+        float highest = - INFINITY;
         int opcode[] = {0, 1, 2, 3};
         for (int op : opcode) {
             board b = before;
             int score = b.move(op);
+            std::cout << "op: " << op << "   score: " << score << std::endl;
             if (score != -1) {
                 float value = get_value(b);
 
-                if (value >= s.value) { // >= instead of > because now default is 0 instead of -1
+                std::cout << "value + score: " << value << " + " << score << " = " << value + score << std::endl;
+                std::cout << "highest = " << highest << std::endl;
+                if (value + score > highest) {
                     // TODO == comparison for float is not precise
+                    highest = value + score;
                     best = action::move(op);
                     s.value = value;
                     s.after = b;
