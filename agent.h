@@ -153,19 +153,14 @@ public:
         s.reward = 0;
         s.value = 0;
 
-        std::cout << before << std::endl;
-
         float highest = - INFINITY;
         int opcode[] = {0, 1, 2, 3};
         for (int op : opcode) {
             board b = before;
             int score = b.move(op);
-            std::cout << "op: " << op << "   score: " << score << std::endl;
             if (score != -1) {
                 float value = get_value(b);
 
-                std::cout << "value + score: " << value << " + " << score << " = " << value + score << std::endl;
-                std::cout << "highest = " << highest << std::endl;
                 if (value + score > highest) {
                     // TODO == comparison for float is not precise
                     highest = value + score;
