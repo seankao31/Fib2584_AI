@@ -11,7 +11,18 @@
 
 class statistic {
 public:
-    statistic(const size_t& total, const size_t& block = 0) : total(total), block(block ? block : total) {}
+    /**
+    * the total episodes to run
+    * the block size of statistic
+    * the limit of saving records
+    *
+    * note that total >= limit >= block
+    */
+    statistic(const size_t& total, const size_t& block = 0, const size_t& limit = 0)
+          : total(total),
+            block(block ? block : this->total),
+            limit(std::max(limit, this->block)),
+            count(0) {}
 
 public:
     /**
@@ -57,10 +68,10 @@ public:
         float avg = float(sum) / block;
         float coef = 100.0 / block;
         float ops = opc * 1000.0 / duration;
-        std::cout << data.size() << "\t";
-        std::cout << "avg = " << int(avg) << ", ";
-        std::cout << "max = " << int(max) << ", ";
-        std::cout << "ops = " << int(ops) << std::endl;
+        std::cout << count << "\t";
+        std::cout << "avg = " << unsigned(avg) << ", ";
+        std::cout << "max = " << unsigned(max) << ", ";
+        std::cout << "ops = " << unsigned(ops) << std::endl;
         for (int t = 0, c = 0; c < block; c += stat[t++]) {
             if (stat[t] == 0) continue;
             int accu = std::accumulate(stat + t, stat + 32, 0);
@@ -78,17 +89,18 @@ public:
     }
 
     bool is_finished() const {
-        return data.size() >= total;
+        return count >= total;
     }
 
     void open_episode(const std::string& flag = "") {
+        if (count++ >= limit) data.pop_front();
         data.emplace_back();
         data.back().tick();
     }
 
     void close_episode(const std::string& flag = "") {
         data.back().tock();
-        if (data.size() % block == 0) show();
+        if (count % block == 0) show();
     }
 
     board make_empty_board() {
@@ -117,7 +129,7 @@ public:
     friend std::istream& operator >>(std::istream& in, statistic& stat) {
         auto size = stat.data.size();
         in.read(reinterpret_cast<char*>(&size), sizeof(size));
-        stat.total = stat.block = size;
+        stat.total = stat.block = stat.limit = stat.count = size;
         stat.data.resize(size);
         for (record& rec : stat.data) in >> rec;
         return in;
@@ -126,7 +138,7 @@ public:
 private:
     class record : public std::vector<action> {
     public:
-        record() { reserve(80000); }
+        record() { reserve(32768); }
         void tick() { time[0] = milli(); }
         void tock() { time[1] = milli(); }
         uint64_t tick_time() const { return time[0]; }
@@ -167,5 +179,7 @@ private:
 
     size_t total;
     size_t block;
+    size_t limit;
+    size_t count;
     std::list<record> data;
 };
