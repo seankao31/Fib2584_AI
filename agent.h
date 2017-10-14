@@ -10,7 +10,7 @@
 #include "action.h"
 #include "weight.h"
 
-#define TILENUMBER 27
+#define TILENUMBER 24
 
 class agent {
 public:
