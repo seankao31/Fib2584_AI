@@ -4,6 +4,7 @@
 #include <sstream>
 #include <map>
 #include <cmath>
+#include <utility>
 #include <type_traits>
 #include <algorithm>
 #include "board.h"
@@ -84,8 +85,10 @@ public:
 
         if (property.find("load") != property.end())
             load_weights(property["load"]);
-        else
-            weights.push_back(weight(2 * SIZE));
+        else {
+            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE));
+        }
     }
     ~player() {
         if (property.find("save") != property.end())
@@ -118,30 +121,14 @@ public:
             //std::cout << delta << " = " << alpha << " * (" << episode[i+1].reward << " + " << episode[i+1].value << " - " <<  episode[i].value << ")" << std::endl;
             //std::cout << "apply to the following:" << std::endl;
 
-            std::array<size_t, 8> lidx = get_idx_list(episode[i].after);
-            for (size_t idx : lidx) {
-                if (idx >= 2*SIZE) {
+            std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(episode[i].after);
+            for (std::pair<size_t, size_t> ie : ielist) {
+                if (ie.second >= SIZE) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
                     continue;
                 }
 
-                // print debug begin
-                //size_t pidx = idx;
-                //std::cout << pidx << std::endl;
-                //if (pidx >= SIZE) {
-                    //std::cout << "inner ";
-                    //pidx -= SIZE;
-                //}
-                //else
-                    //std::cout << "outer ";
-                //for (int i = 0; i < 4; ++i) {
-                    //std::cout << pidx % TILENUMBER << ",";
-                    //pidx /= TILENUMBER;
-                //}
-                //std::cout << std::endl;
-                // print debug end
-
-                weights.back()[idx] += delta;
+                weights[ie.first][ie.second] += delta;
                 episode[i].value += delta;
             }
         }
@@ -206,28 +193,28 @@ public:
 private:
     float get_value(const board& b) {
         float value = 0;
-        std::array<size_t, 8> lidx = get_idx_list(b);
-        for (size_t idx : lidx) {
-            if (idx >= 2*SIZE)
+        std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(b);
+        for (std::pair<size_t, size_t> ie : ielist) {
+            if (ie.second >= SIZE)
                 continue;
-            value += weights.back()[idx];
+            value += weights[ie.first][ie.second];
         }
         return value;
     }
 
-    std::array<size_t, 8> get_idx_list(const board& b) {
-        std::array<size_t, 8> lidx;
+    std::array<std::pair<size_t, size_t>, 8> get_idx_entry_list(const board& b) {
+        std::array<std::pair<size_t, size_t>, 8> ielist;
         board r = b;
-        lidx[0] = get_idx(r[0], 0);
-        lidx[1] = get_idx(r[1], 1);
-        lidx[2] = get_idx(r[2], 1);
-        lidx[3] = get_idx(r[3], 0);
+        ielist[0] = std::make_pair(0, get_entry(r[0]));
+        ielist[1] = std::make_pair(1, get_entry(r[1]));
+        ielist[2] = std::make_pair(1, get_entry(r[2]));
+        ielist[3] = std::make_pair(0, get_entry(r[3]));
         r.rotate_right();
-        lidx[4] = get_idx(r[0], 0);
-        lidx[5] = get_idx(r[1], 1);
-        lidx[6] = get_idx(r[2], 1);
-        lidx[7] = get_idx(r[3], 0);
-        return lidx;
+        ielist[4] = std::make_pair(0, get_entry(r[0]));
+        ielist[5] = std::make_pair(1, get_entry(r[1]));
+        ielist[6] = std::make_pair(1, get_entry(r[2]));
+        ielist[7] = std::make_pair(0, get_entry(r[3]));
+        return ielist;
     }
 
     /*
@@ -236,32 +223,26 @@ private:
      *inner inner inner inner
      *outer outer outer outer
      */
-    size_t get_idx(const std::array<int, 4>& row, bool inner) {
-        size_t idx = 0;
+    size_t get_entry(const std::array<int, 4>& row) {
+        size_t entry = 0;
         if (row[0] > row[3] || (row[0] == row[3] && row[1] > row[2])) {
             for (int i = 3; i >= 0; i--) {
-                idx *= TILENUMBER;
-                idx += row[i];
+                entry *= TILENUMBER;
+                entry += row[i];
             }
         }
         else {
             for (int i = 0; i < 4; i++) {
-                idx *= TILENUMBER;
-                idx += row[i];
+                entry *= TILENUMBER;
+                entry += row[i];
             }
         }
-        if (idx >= SIZE) // should be out of bound
-            idx += SIZE;
-
-        if (inner)
-            idx += SIZE;
-
-        if (idx >= 2*SIZE) {
+        if (entry >= SIZE) {
             std::cout << "index out of bound" << std::endl;
             std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
         }
 
-        return idx;
+        return entry;
     }
 
 private:
