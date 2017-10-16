@@ -86,8 +86,12 @@ public:
         if (property.find("load") != property.end())
             load_weights(property["load"]);
         else {
-            weights.push_back(weight(SIZE));
-            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE_FOUR)); // outer 4-tuple
+            weights.push_back(weight(SIZE_FOUR)); // inner 4-tuple
+        }
+        if (weights.size() == 2) {
+            weights.push_back(weight(SIZE_SIX)); // outer 6-tuple
+            weights.push_back(weight(SIZE_SIX)); // inner 6-tuple
         }
     }
     ~player() {
@@ -123,7 +127,7 @@ public:
 
             std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(episode[i].after);
             for (std::pair<size_t, size_t> ie : ielist) {
-                if (ie.second >= SIZE) {
+                if (ie.second >= SIZE_FOUR) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
                     continue;
                 }
@@ -195,7 +199,7 @@ private:
         float value = 0;
         std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(b);
         for (std::pair<size_t, size_t> ie : ielist) {
-            if (ie.second >= SIZE)
+            if (ie.second >= SIZE_FOUR)
                 continue;
             value += weights[ie.first][ie.second];
         }
@@ -237,7 +241,7 @@ private:
                 entry += row[i];
             }
         }
-        if (entry >= SIZE) {
+        if (entry >= SIZE_FOUR) {
             std::cout << "index out of bound" << std::endl;
             std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
         }
@@ -259,5 +263,6 @@ private:
 
 private:
     std::default_random_engine engine;
-    unsigned int SIZE = pow(TILENUMBER, 4);
+    unsigned int SIZE_FOUR = pow(TILENUMBER, 4);
+    unsigned int SIZE_SIX = pow(TILENUMBER, 6);
 };
