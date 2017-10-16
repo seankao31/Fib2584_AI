@@ -127,7 +127,7 @@ public:
 
             std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(episode[i].after);
             for (std::pair<size_t, size_t> ie : ielist) {
-                if (ie.second >= SIZE_FOUR) {
+                if ((ie.first < 2 && ie.second >= SIZE_FOUR) || (ie.first >= 2 && ie.second >= SIZE_SIX)) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
                     continue;
                 }
@@ -287,6 +287,35 @@ private:
  */
     size_t get_entry_six(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f, bool inner) {
         size_t entry = 0;
+
+        if (!inner || (a < b || (a==b && c < d) || (a==b && c==d && e <= f))) {
+            entry *= TILENUMBER;
+            entry += a;
+            entry *= TILENUMBER;
+            entry += b;
+            entry *= TILENUMBER;
+            entry += c;
+            entry *= TILENUMBER;
+            entry += d;
+            entry *= TILENUMBER;
+            entry += e;
+            entry *= TILENUMBER;
+            entry += f;
+        }
+        else {
+            entry *= TILENUMBER;
+            entry += b;
+            entry *= TILENUMBER;
+            entry += a;
+            entry *= TILENUMBER;
+            entry += d;
+            entry *= TILENUMBER;
+            entry += c;
+            entry *= TILENUMBER;
+            entry += f;
+            entry *= TILENUMBER;
+            entry += e;
+        }
 
         if (entry >= SIZE_SIX) {
             std::cout << "index out of bound" << std::endl;
