@@ -86,8 +86,12 @@ public:
         if (property.find("load") != property.end())
             load_weights(property["load"]);
         else {
-            weights.push_back(weight(SIZE));
-            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE_FOUR)); // outer 4-tuple
+            weights.push_back(weight(SIZE_FOUR)); // inner 4-tuple
+        }
+        if (weights.size() == 2) {
+            weights.push_back(weight(SIZE_SIX)); // outer 6-tuple
+            weights.push_back(weight(SIZE_SIX)); // inner 6-tuple
         }
     }
     ~player() {
@@ -121,9 +125,9 @@ public:
             //std::cout << delta << " = " << alpha << " * (" << episode[i+1].reward << " + " << episode[i+1].value << " - " <<  episode[i].value << ")" << std::endl;
             //std::cout << "apply to the following:" << std::endl;
 
-            std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(episode[i].after);
+            std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(episode[i].after);
             for (std::pair<size_t, size_t> ie : ielist) {
-                if (ie.second >= SIZE) {
+                if (ie.second >= SIZE_FOUR) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
                     continue;
                 }
@@ -193,27 +197,47 @@ public:
 private:
     float get_value(const board& b) {
         float value = 0;
-        std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(b);
+        std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(b);
         for (std::pair<size_t, size_t> ie : ielist) {
-            if (ie.second >= SIZE)
+            if (ie.second >= SIZE_FOUR)
                 continue;
             value += weights[ie.first][ie.second];
         }
         return value;
     }
 
-    std::array<std::pair<size_t, size_t>, 8> get_idx_entry_list(const board& b) {
-        std::array<std::pair<size_t, size_t>, 8> ielist;
+    std::array<std::pair<size_t, size_t>, 20> get_idx_entry_list(const board& b) {
+        std::array<std::pair<size_t, size_t>, 20> ielist;
         board r = b;
-        ielist[0] = std::make_pair(0, get_entry(r[0]));
-        ielist[1] = std::make_pair(1, get_entry(r[1]));
-        ielist[2] = std::make_pair(1, get_entry(r[2]));
-        ielist[3] = std::make_pair(0, get_entry(r[3]));
+
+        // 4-tuple
+        ielist[0] = std::make_pair(0, get_entry_four(r[0]));
+        ielist[1] = std::make_pair(1, get_entry_four(r[1]));
+        ielist[2] = std::make_pair(1, get_entry_four(r[2]));
+        ielist[3] = std::make_pair(0, get_entry_four(r[3]));
         r.rotate_right();
-        ielist[4] = std::make_pair(0, get_entry(r[0]));
-        ielist[5] = std::make_pair(1, get_entry(r[1]));
-        ielist[6] = std::make_pair(1, get_entry(r[2]));
-        ielist[7] = std::make_pair(0, get_entry(r[3]));
+        ielist[4] = std::make_pair(0, get_entry_four(r[0]));
+        ielist[5] = std::make_pair(1, get_entry_four(r[1]));
+        ielist[6] = std::make_pair(1, get_entry_four(r[2]));
+        ielist[7] = std::make_pair(0, get_entry_four(r[3]));
+
+        // 6-tuple
+        ielist[8] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[9] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[10] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        r.rotate_right();
+        ielist[11] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[12] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[13] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        r.rotate_right();
+        ielist[14] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[15] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[16] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        r.rotate_right();
+        ielist[17] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[18] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[19] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+
         return ielist;
     }
 
@@ -223,7 +247,7 @@ private:
      *inner inner inner inner
      *outer outer outer outer
      */
-    size_t get_entry(const std::array<int, 4>& row) {
+    size_t get_entry_four(const std::array<int, 4>& row) {
         size_t entry = 0;
         if (row[0] > row[3] || (row[0] == row[3] && row[1] > row[2])) {
             for (int i = 3; i >= 0; i--) {
@@ -237,9 +261,36 @@ private:
                 entry += row[i];
             }
         }
-        if (entry >= SIZE) {
+        if (entry >= SIZE_FOUR) {
             std::cout << "index out of bound" << std::endl;
             std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
+        }
+
+        return entry;
+    }
+
+/*
+ *    outer(a) outer(b) x x
+ *    outer(c) outer(d) x x
+ *    outer(e) outer(f) x x
+ *    xxxxxxxx xxxxxxxx x x
+ *
+ *    x x outer(b) outer(a)
+ *    x x outer(d) outer(c)
+ *    x x outer(f) outer(e)
+ *    x x xxxxxxxx xxxxxxxx
+ *
+ *    x inner(a) inner(b) x
+ *    x inner(c) inner(d) x
+ *    x inner(e) inner(f) x
+ *    x xxxxxxxx xxxxxxxx x
+ */
+    size_t get_entry_six(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f, bool inner) {
+        size_t entry = 0;
+
+        if (entry >= SIZE_SIX) {
+            std::cout << "index out of bound" << std::endl;
+            std::cout << "the 6-tuple: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
         }
 
         return entry;
@@ -259,5 +310,6 @@ private:
 
 private:
     std::default_random_engine engine;
-    unsigned int SIZE = pow(TILENUMBER, 4);
+    unsigned int SIZE_FOUR = pow(TILENUMBER, 4);
+    unsigned int SIZE_SIX = pow(TILENUMBER, 6);
 };
