@@ -125,7 +125,7 @@ public:
             //std::cout << delta << " = " << alpha << " * (" << episode[i+1].reward << " + " << episode[i+1].value << " - " <<  episode[i].value << ")" << std::endl;
             //std::cout << "apply to the following:" << std::endl;
 
-            std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(episode[i].after);
+            std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(episode[i].after);
             for (std::pair<size_t, size_t> ie : ielist) {
                 if (ie.second >= SIZE_FOUR) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
@@ -197,7 +197,7 @@ public:
 private:
     float get_value(const board& b) {
         float value = 0;
-        std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(b);
+        std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(b);
         for (std::pair<size_t, size_t> ie : ielist) {
             if (ie.second >= SIZE_FOUR)
                 continue;
@@ -206,9 +206,11 @@ private:
         return value;
     }
 
-    std::array<std::pair<size_t, size_t>, 8> get_idx_entry_list(const board& b) {
-        std::array<std::pair<size_t, size_t>, 8> ielist;
+    std::array<std::pair<size_t, size_t>, 20> get_idx_entry_list(const board& b) {
+        std::array<std::pair<size_t, size_t>, 20> ielist;
         board r = b;
+
+        // 4-tuple
         ielist[0] = std::make_pair(0, get_entry_four(r[0]));
         ielist[1] = std::make_pair(1, get_entry_four(r[1]));
         ielist[2] = std::make_pair(1, get_entry_four(r[2]));
@@ -218,6 +220,24 @@ private:
         ielist[5] = std::make_pair(1, get_entry_four(r[1]));
         ielist[6] = std::make_pair(1, get_entry_four(r[2]));
         ielist[7] = std::make_pair(0, get_entry_four(r[3]));
+
+        // 6-tuple
+        ielist[8] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[9] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[10] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        r.rotate_right();
+        ielist[11] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[12] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[13] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        r.rotate_right();
+        ielist[14] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[15] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[16] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        r.rotate_right();
+        ielist[17] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[18] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[19] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+
         return ielist;
     }
 
