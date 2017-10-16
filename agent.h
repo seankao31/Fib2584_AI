@@ -209,15 +209,15 @@ private:
     std::array<std::pair<size_t, size_t>, 8> get_idx_entry_list(const board& b) {
         std::array<std::pair<size_t, size_t>, 8> ielist;
         board r = b;
-        ielist[0] = std::make_pair(0, get_entry(r[0]));
-        ielist[1] = std::make_pair(1, get_entry(r[1]));
-        ielist[2] = std::make_pair(1, get_entry(r[2]));
-        ielist[3] = std::make_pair(0, get_entry(r[3]));
+        ielist[0] = std::make_pair(0, get_entry_four(r[0]));
+        ielist[1] = std::make_pair(1, get_entry_four(r[1]));
+        ielist[2] = std::make_pair(1, get_entry_four(r[2]));
+        ielist[3] = std::make_pair(0, get_entry_four(r[3]));
         r.rotate_right();
-        ielist[4] = std::make_pair(0, get_entry(r[0]));
-        ielist[5] = std::make_pair(1, get_entry(r[1]));
-        ielist[6] = std::make_pair(1, get_entry(r[2]));
-        ielist[7] = std::make_pair(0, get_entry(r[3]));
+        ielist[4] = std::make_pair(0, get_entry_four(r[0]));
+        ielist[5] = std::make_pair(1, get_entry_four(r[1]));
+        ielist[6] = std::make_pair(1, get_entry_four(r[2]));
+        ielist[7] = std::make_pair(0, get_entry_four(r[3]));
         return ielist;
     }
 
@@ -227,7 +227,7 @@ private:
      *inner inner inner inner
      *outer outer outer outer
      */
-    size_t get_entry(const std::array<int, 4>& row) {
+    size_t get_entry_four(const std::array<int, 4>& row) {
         size_t entry = 0;
         if (row[0] > row[3] || (row[0] == row[3] && row[1] > row[2])) {
             for (int i = 3; i >= 0; i--) {
@@ -244,6 +244,33 @@ private:
         if (entry >= SIZE_FOUR) {
             std::cout << "index out of bound" << std::endl;
             std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
+        }
+
+        return entry;
+    }
+
+/*
+ *    outer(a) outer(b) x x
+ *    outer(c) outer(d) x x
+ *    outer(e) outer(f) x x
+ *    xxxxxxxx xxxxxxxx x x
+ *
+ *    x x outer(b) outer(a)
+ *    x x outer(d) outer(c)
+ *    x x outer(f) outer(e)
+ *    x x xxxxxxxx xxxxxxxx
+ *
+ *    x inner(a) inner(b) x
+ *    x inner(c) inner(d) x
+ *    x inner(e) inner(f) x
+ *    x xxxxxxxx xxxxxxxx x
+ */
+    size_t get_entry_six(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f, bool inner) {
+        size_t entry = 0;
+
+        if (entry >= SIZE_SIX) {
+            std::cout << "index out of bound" << std::endl;
+            std::cout << "the 6-tuple: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
         }
 
         return entry;
