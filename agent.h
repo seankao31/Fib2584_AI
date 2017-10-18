@@ -199,7 +199,7 @@ private:
         float value = 0;
         std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(b);
         for (std::pair<size_t, size_t> ie : ielist) {
-            if (ie.second >= SIZE_FOUR)
+            if ((ie.first < 2 && ie.second >= SIZE_FOUR) || (ie.first >= 2 && ie.second >= SIZE_SIX))
                 continue;
             value += weights[ie.first][ie.second];
         }
