@@ -76,12 +76,14 @@ private:
 
 class player : public agent {
 public:
-    player(const std::string& args = "") : agent("name=player " + args), alpha(0.0025f) {
+    player(const std::string& args = "") : agent("name=player " + args), alpha(0.0025f), merge(TILENUMBER) {
         episode.reserve(32768);
         if (property.find("seed") != property.end())
             engine.seed(int(property["seed"]));
         if (property.find("alpha") != property.end())
             alpha = float(property["alpha"]);
+        if (property.find("merge") != property.end())
+            merge = int(property["merge"]);
 
         if (property.find("load") != property.end())
             load_weights(property["load"]);
@@ -224,24 +226,24 @@ private:
         return ielist;
     }
 
-    /*
-     *outer outer outer outer
-     *inner inner inner inner
-     *inner inner inner inner
-     *xxxxx xxxxx xxxxx xxxxx
-     */
+    int merge_tile(const int &tile) {
+        if (tile >= merge)
+            return merge;
+        return tile;
+    }
+
     size_t get_entry_axe(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f) {
-        size_t entry = a;
+        size_t entry = merge_tile(a);
         entry *= TILENUMBER;
-        entry += b;
+        entry += merge_tile(b);
         entry *= TILENUMBER;
-        entry += c;
+        entry += merge_tile(c);
         entry *= TILENUMBER;
-        entry += d;
+        entry += merge_tile(d);
         entry *= TILENUMBER;
-        entry += e;
+        entry += merge_tile(e);
         entry *= TILENUMBER;
-        entry += f;
+        entry += merge_tile(f);
         if (entry >= SIZE) {
             std::cout << "index out of bound" << std::endl;
             std::cout << "the axe: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
@@ -271,31 +273,31 @@ private:
 
         if (!inner || (a < b || (a==b && c < d) || (a==b && c==d && e <= f))) {
             entry *= TILENUMBER;
-            entry += a;
+            entry += merge_tile(a);
             entry *= TILENUMBER;
-            entry += b;
+            entry += merge_tile(b);
             entry *= TILENUMBER;
-            entry += c;
+            entry += merge_tile(c);
             entry *= TILENUMBER;
-            entry += d;
+            entry += merge_tile(d);
             entry *= TILENUMBER;
-            entry += e;
+            entry += merge_tile(e);
             entry *= TILENUMBER;
-            entry += f;
+            entry += merge_tile(f);
         }
         else {
             entry *= TILENUMBER;
-            entry += b;
+            entry += merge_tile(b);
             entry *= TILENUMBER;
-            entry += a;
+            entry += merge_tile(a);
             entry *= TILENUMBER;
-            entry += d;
+            entry += merge_tile(d);
             entry *= TILENUMBER;
-            entry += c;
+            entry += merge_tile(c);
             entry *= TILENUMBER;
-            entry += f;
+            entry += merge_tile(f);
             entry *= TILENUMBER;
-            entry += e;
+            entry += merge_tile(e);
         }
 
         if (entry >= SIZE) {
@@ -317,6 +319,7 @@ private:
 
     std::vector<state> episode;
     float alpha;
+    int merge;
 
 private:
     std::default_random_engine engine;
