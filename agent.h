@@ -86,12 +86,10 @@ public:
         if (property.find("load") != property.end())
             load_weights(property["load"]);
         else {
-            weights.push_back(weight(SIZE_FOUR)); // outer 4-tuple
-            weights.push_back(weight(SIZE_FOUR)); // inner 4-tuple
-        }
-        if (weights.size() == 2) {
-            weights.push_back(weight(SIZE_SIX)); // outer 6-tuple
-            weights.push_back(weight(SIZE_SIX)); // inner 6-tuple
+            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE));
         }
     }
     ~player() {
@@ -105,29 +103,11 @@ public:
     }
 
     virtual void close_episode(const std::string& flag = "") {
-        // TODO: train the n-tuple network by TD(0)
-        //for (state s: episode) {
-            //std::cout << s.reward << std::endl;
-            //std::cout << s.after << std::endl << std::endl;
-        //}
-
-        //std::cout << "reward: " << episode.back().reward << std::endl;
-        //std::cout << "ignore final board" << std::endl;
-        //std::cout << "====================" << std::endl;
-
         for (int i = episode.size()-2; i >= 0; i--) {
-
-            //std::cout << "reward: " << episode[i].reward << std::endl;
-            //std::cout << episode[i].after << std::endl << std::endl;
-
             float delta = alpha * (episode[i+1].reward + episode[i+1].value - episode[i].value);
-
-            //std::cout << delta << " = " << alpha << " * (" << episode[i+1].reward << " + " << episode[i+1].value << " - " <<  episode[i].value << ")" << std::endl;
-            //std::cout << "apply to the following:" << std::endl;
-
-            std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(episode[i].after);
+            std::array<std::pair<size_t, size_t>, 36> ielist = get_idx_entry_list(episode[i].after);
             for (std::pair<size_t, size_t> ie : ielist) {
-                if ((ie.first < 2 && ie.second >= SIZE_FOUR) || (ie.first >= 2 && ie.second >= SIZE_SIX)) {
+                if (ie.second >= SIZE) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
                     continue;
                 }
@@ -153,7 +133,6 @@ public:
                 float value = get_value(b);
 
                 if (value + score > highest) {
-                    // TODO == comparison for float is not precise
                     highest = value + score;
                     best = action::move(op);
                     s.value = value;
@@ -197,39 +176,49 @@ public:
 private:
     float get_value(const board& b) {
         float value = 0;
-        std::array<std::pair<size_t, size_t>, 20> ielist = get_idx_entry_list(b);
+        std::array<std::pair<size_t, size_t>, 36> ielist = get_idx_entry_list(b);
         for (std::pair<size_t, size_t> ie : ielist) {
-            if ((ie.first < 2 && ie.second >= SIZE_FOUR) || (ie.first >= 2 && ie.second >= SIZE_SIX))
+            if (ie.second >= SIZE)
                 continue;
             value += weights[ie.first][ie.second];
         }
         return value;
     }
 
-    std::array<std::pair<size_t, size_t>, 20> get_idx_entry_list(const board& b) {
-        std::array<std::pair<size_t, size_t>, 20> ielist;
+    std::array<std::pair<size_t, size_t>, 36> get_idx_entry_list(const board& b) {
+        std::array<std::pair<size_t, size_t>, 36> ielist;
         board r = b;
 
-        // 4-tuple
-        ielist[0] = std::make_pair(0, get_entry_four(r[0]));
-        ielist[1] = std::make_pair(1, get_entry_four(r[1]));
-        ielist[2] = std::make_pair(1, get_entry_four(r[2]));
-        ielist[3] = std::make_pair(0, get_entry_four(r[3]));
-        r.rotate_right();
-        ielist[4] = std::make_pair(0, get_entry_four(r[0]));
-        ielist[5] = std::make_pair(1, get_entry_four(r[1]));
-        ielist[6] = std::make_pair(1, get_entry_four(r[2]));
-        ielist[7] = std::make_pair(0, get_entry_four(r[3]));
+        size_t i = 0;
 
-        // 6-tuple
-        ielist[8] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
-        ielist[9] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
-        ielist[10] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
-        for (int i = 11; i < 20; i+=3) {
+        ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        for (int j = 0; j < 3; j++) {
             r.rotate_right();
-            ielist[i] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
-            ielist[i+1] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
-            ielist[i+2] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+            ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        }
+        r.reflect_horizontal();
+        ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        for (int j = 0; j < 3; j++) {
+            r.rotate_right();
+            ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        }
+
+        ielist[i++] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[i++] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[i++] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        for (int j = 0; j < 3; j++) {
+            r.rotate_right();
+            ielist[i++] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+            ielist[i++] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+            ielist[i++] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
         }
 
         return ielist;
@@ -239,25 +228,23 @@ private:
      *outer outer outer outer
      *inner inner inner inner
      *inner inner inner inner
-     *outer outer outer outer
+     *xxxxx xxxxx xxxxx xxxxx
      */
-    size_t get_entry_four(const std::array<int, 4>& row) {
-        size_t entry = 0;
-        if (row[0] > row[3] || (row[0] == row[3] && row[1] > row[2])) {
-            for (int i = 3; i >= 0; i--) {
-                entry *= TILENUMBER;
-                entry += row[i];
-            }
-        }
-        else {
-            for (int i = 0; i < 4; i++) {
-                entry *= TILENUMBER;
-                entry += row[i];
-            }
-        }
-        if (entry >= SIZE_FOUR) {
+    size_t get_entry_axe(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f) {
+        size_t entry = a;
+        entry *= TILENUMBER;
+        entry += b;
+        entry *= TILENUMBER;
+        entry += c;
+        entry *= TILENUMBER;
+        entry += d;
+        entry *= TILENUMBER;
+        entry += e;
+        entry *= TILENUMBER;
+        entry += f;
+        if (entry >= SIZE) {
             std::cout << "index out of bound" << std::endl;
-            std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
+            std::cout << "the axe: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
         }
 
         return entry;
@@ -311,7 +298,7 @@ private:
             entry += e;
         }
 
-        if (entry >= SIZE_SIX) {
+        if (entry >= SIZE) {
             std::cout << "index out of bound" << std::endl;
             std::cout << "the 6-tuple: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
         }
@@ -333,6 +320,5 @@ private:
 
 private:
     std::default_random_engine engine;
-    unsigned int SIZE_FOUR = pow(TILENUMBER, 4);
-    unsigned int SIZE_SIX = pow(TILENUMBER, 6);
+    unsigned int SIZE = pow(TILENUMBER, 6);
 };
