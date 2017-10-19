@@ -45,8 +45,11 @@ def parse_file(filename):
 
     stats = []
     with f:
-        chunks = to_chunks(f.readlines()[2:])
+        chunks = to_chunks(f.readlines())
         for chunk in chunks:
+            tmp = parse("2584-Demo: {}", chunk[0])
+            if tmp is not None:
+                continue
             p = parse("{:d}\tavg = {:d}, max = {:d}, ops = {:d}", chunk[0])
             meta = dict(zip(('iteration', 'avg', 'max', 'ops'), p.fixed))
             achieve = {}
@@ -60,16 +63,26 @@ def parse_file(filename):
     return stats
 
 
-def plot(stats):
+def plot(stats, tile):
     avgs = []
-    winrates = []
+    winrates1 = []
+    winrates2 = []
+    winrates3 = []
     for stat in stats:
         avgs.append(stat.meta['avg'])
-        winrates.append(stat.achieve.get(17, 0))
-    plt.subplot(211)
-    plt.title("Win Rate (%)")
-    plt.plot([i+1 for i in range(len(avgs))], winrates)
-    plt.subplot(212)
+        winrates1.append(stat.achieve.get(tile, 0))
+        winrates2.append(stat.achieve.get(tile+1, 0))
+        winrates3.append(stat.achieve.get(tile+2, 0))
+    plt.subplot(221)
+    plt.title("tile-{} Rate (%)".format(tile))
+    plt.plot([i+1 for i in range(len(avgs))], winrates1)
+    plt.subplot(222)
+    plt.title("tile-{} Rate (%)".format(tile+1))
+    plt.plot([i+1 for i in range(len(avgs))], winrates2)
+    plt.subplot(223)
+    plt.title("tile-{} Rate (%)".format(tile+2))
+    plt.plot([i+1 for i in range(len(avgs))], winrates3)
+    plt.subplot(224)
     plt.title("Average Score")
     plt.plot([i+1 for i in range(len(avgs))], avgs)
     title = "Fibonacci-2584 game trained {:,d} iterations".format(stats[-1].meta['iteration'])
@@ -78,9 +91,9 @@ def plot(stats):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print("Bad argv number")
         sys.exit()
     init_fib()
     stats = parse_file(sys.argv[1])
-    plot(stats)
+    plot(stats, int(sys.argv[2]))
