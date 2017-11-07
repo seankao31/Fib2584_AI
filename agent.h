@@ -76,16 +76,20 @@ private:
 
 class player : public agent {
 public:
-    player(const std::string& args = "") : agent("name=player " + args), alpha(0.0025f) {
+    player(const std::string& args = "") : agent("name=player " + args), alpha(0.0025f), merge(TILENUMBER) {
         episode.reserve(32768);
         if (property.find("seed") != property.end())
             engine.seed(int(property["seed"]));
         if (property.find("alpha") != property.end())
             alpha = float(property["alpha"]);
+        if (property.find("merge") != property.end())
+            merge = int(property["merge"]);
 
         if (property.find("load") != property.end())
             load_weights(property["load"]);
         else {
+            weights.push_back(weight(SIZE));
+            weights.push_back(weight(SIZE));
             weights.push_back(weight(SIZE));
             weights.push_back(weight(SIZE));
         }
@@ -101,27 +105,9 @@ public:
     }
 
     virtual void close_episode(const std::string& flag = "") {
-        // TODO: train the n-tuple network by TD(0)
-        //for (state s: episode) {
-            //std::cout << s.reward << std::endl;
-            //std::cout << s.after << std::endl << std::endl;
-        //}
-
-        //std::cout << "reward: " << episode.back().reward << std::endl;
-        //std::cout << "ignore final board" << std::endl;
-        //std::cout << "====================" << std::endl;
-
         for (int i = episode.size()-2; i >= 0; i--) {
-
-            //std::cout << "reward: " << episode[i].reward << std::endl;
-            //std::cout << episode[i].after << std::endl << std::endl;
-
             float delta = alpha * (episode[i+1].reward + episode[i+1].value - episode[i].value);
-
-            //std::cout << delta << " = " << alpha << " * (" << episode[i+1].reward << " + " << episode[i+1].value << " - " <<  episode[i].value << ")" << std::endl;
-            //std::cout << "apply to the following:" << std::endl;
-
-            std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(episode[i].after);
+            std::array<std::pair<size_t, size_t>, 36> ielist = get_idx_entry_list(episode[i].after);
             for (std::pair<size_t, size_t> ie : ielist) {
                 if (ie.second >= SIZE) {
                     std::cout << "index out of bound (maybe achieved unexpected larger tile)" << std::endl;
@@ -149,7 +135,6 @@ public:
                 float value = get_value(b);
 
                 if (value + score > highest) {
-                    // TODO == comparison for float is not precise
                     highest = value + score;
                     best = action::move(op);
                     s.value = value;
@@ -193,7 +178,7 @@ public:
 private:
     float get_value(const board& b) {
         float value = 0;
-        std::array<std::pair<size_t, size_t>, 8> ielist = get_idx_entry_list(b);
+        std::array<std::pair<size_t, size_t>, 36> ielist = get_idx_entry_list(b);
         for (std::pair<size_t, size_t> ie : ielist) {
             if (ie.second >= SIZE)
                 continue;
@@ -202,44 +187,122 @@ private:
         return value;
     }
 
-    std::array<std::pair<size_t, size_t>, 8> get_idx_entry_list(const board& b) {
-        std::array<std::pair<size_t, size_t>, 8> ielist;
+    std::array<std::pair<size_t, size_t>, 36> get_idx_entry_list(const board& b) {
+        std::array<std::pair<size_t, size_t>, 36> ielist;
         board r = b;
-        ielist[0] = std::make_pair(0, get_entry(r[0]));
-        ielist[1] = std::make_pair(1, get_entry(r[1]));
-        ielist[2] = std::make_pair(1, get_entry(r[2]));
-        ielist[3] = std::make_pair(0, get_entry(r[3]));
-        r.rotate_right();
-        ielist[4] = std::make_pair(0, get_entry(r[0]));
-        ielist[5] = std::make_pair(1, get_entry(r[1]));
-        ielist[6] = std::make_pair(1, get_entry(r[2]));
-        ielist[7] = std::make_pair(0, get_entry(r[3]));
+
+        size_t i = 0;
+
+        ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        for (int j = 0; j < 3; j++) {
+            r.rotate_right();
+            ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        }
+        r.reflect_horizontal();
+        ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+        ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        for (int j = 0; j < 3; j++) {
+            r.rotate_right();
+            ielist[i++] = std::make_pair(0, get_entry_axe(r(0), r(1), r(2), r(3), r(6), r(7)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(4), r(5), r(6), r(7), r(10), r(11)));
+            ielist[i++] = std::make_pair(1, get_entry_axe(r(8), r(9), r(10), r(11), r(14), r(15)));
+        }
+
+        ielist[i++] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+        ielist[i++] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+        ielist[i++] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        for (int j = 0; j < 3; j++) {
+            r.rotate_right();
+            ielist[i++] = std::make_pair(2, get_entry_six(r(0), r(1), r(4), r(5), r(8), r(9), false));
+            ielist[i++] = std::make_pair(3, get_entry_six(r(1), r(2), r(5), r(6), r(9), r(10), true));
+            ielist[i++] = std::make_pair(2, get_entry_six(r(3), r(2), r(7), r(6), r(11), r(10), false));
+        }
+
         return ielist;
     }
 
-    /*
-     *outer outer outer outer
-     *inner inner inner inner
-     *inner inner inner inner
-     *outer outer outer outer
-     */
-    size_t get_entry(const std::array<int, 4>& row) {
-        size_t entry = 0;
-        if (row[0] > row[3] || (row[0] == row[3] && row[1] > row[2])) {
-            for (int i = 3; i >= 0; i--) {
-                entry *= TILENUMBER;
-                entry += row[i];
-            }
-        }
-        else {
-            for (int i = 0; i < 4; i++) {
-                entry *= TILENUMBER;
-                entry += row[i];
-            }
-        }
+    int merge_tile(const int &tile) {
+        if (tile >= merge)
+            return merge;
+        return tile;
+    }
+
+    size_t get_entry_axe(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f) {
+        size_t entry = merge_tile(a);
+        entry *= TILENUMBER;
+        entry += merge_tile(b);
+        entry *= TILENUMBER;
+        entry += merge_tile(c);
+        entry *= TILENUMBER;
+        entry += merge_tile(d);
+        entry *= TILENUMBER;
+        entry += merge_tile(e);
+        entry *= TILENUMBER;
+        entry += merge_tile(f);
         if (entry >= SIZE) {
             std::cout << "index out of bound" << std::endl;
-            std::cout << "the row: " << row[0] << ' ' << row[1] << ' ' << row[2] << ' ' << row[3] << std::endl;
+            std::cout << "the axe: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
+        }
+
+        return entry;
+    }
+
+/*
+ *    outer(a) outer(b) x x
+ *    outer(c) outer(d) x x
+ *    outer(e) outer(f) x x
+ *    xxxxxxxx xxxxxxxx x x
+ *
+ *    x x outer(b) outer(a)
+ *    x x outer(d) outer(c)
+ *    x x outer(f) outer(e)
+ *    x x xxxxxxxx xxxxxxxx
+ *
+ *    x inner(a) inner(b) x
+ *    x inner(c) inner(d) x
+ *    x inner(e) inner(f) x
+ *    x xxxxxxxx xxxxxxxx x
+ */
+    size_t get_entry_six(const int &a, const int &b, const int &c, const int &d, const int &e, const int &f, bool inner) {
+        size_t entry = 0;
+
+        if (!inner || (a < b || (a==b && c < d) || (a==b && c==d && e <= f))) {
+            entry *= TILENUMBER;
+            entry += merge_tile(a);
+            entry *= TILENUMBER;
+            entry += merge_tile(b);
+            entry *= TILENUMBER;
+            entry += merge_tile(c);
+            entry *= TILENUMBER;
+            entry += merge_tile(d);
+            entry *= TILENUMBER;
+            entry += merge_tile(e);
+            entry *= TILENUMBER;
+            entry += merge_tile(f);
+        }
+        else {
+            entry *= TILENUMBER;
+            entry += merge_tile(b);
+            entry *= TILENUMBER;
+            entry += merge_tile(a);
+            entry *= TILENUMBER;
+            entry += merge_tile(d);
+            entry *= TILENUMBER;
+            entry += merge_tile(c);
+            entry *= TILENUMBER;
+            entry += merge_tile(f);
+            entry *= TILENUMBER;
+            entry += merge_tile(e);
+        }
+
+        if (entry >= SIZE) {
+            std::cout << "index out of bound" << std::endl;
+            std::cout << "the 6-tuple: " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << ' ' << f << std::endl;
         }
 
         return entry;
@@ -256,8 +319,9 @@ private:
 
     std::vector<state> episode;
     float alpha;
+    int merge;
 
 private:
     std::default_random_engine engine;
-    unsigned int SIZE = pow(TILENUMBER, 4);
+    unsigned int SIZE = pow(TILENUMBER, 6);
 };

@@ -163,6 +163,6 @@ public:
 private:
     std::array<std::array<int, 4>, 4> tile;
     bool mergeable(int i1, int i2) {
-        return (i1 == 1 && i1 == i2) || i1 - i2 == 1 || i2 - i1 == 1;
+        return (i1 == 1 && i1 == i2) || ((i1 != 0 && i2 != 0) && (i1 - i2 == 1 || i2 - i1 == 1));
     }
 };
